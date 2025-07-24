@@ -1,0 +1,92 @@
+/* Main CSS for Smart Traffic Management System */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+    width: 100%;
+}
+
+/* Video container styles */
+.video-container {
+    background-color: #000;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+#videoFeed {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Stats card styles */
+.stats-card {
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Upload form styles */
+#upload-form {
+    transition: all 0.3s ease;
+}
+
+#upload-form:hover {
+    transform: translateY(-2px);
+}
+
+#upload-btn {
+    transition: all 0.3s ease;
+}
+
+/* List group item hover effect */
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom animation for alerts */
+.alert {
+    animation: slideInDown 0.5s ease forwards;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive padding for container */
+@media (max-width: 576px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}

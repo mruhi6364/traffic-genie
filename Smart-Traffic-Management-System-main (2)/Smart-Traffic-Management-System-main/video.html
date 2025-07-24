@@ -1,0 +1,309 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<title>Processing {{ video.filename }} - Smart Traffic Management System</title>
+<style>
+    #videoContainer {
+        width: 100%;
+        max-height: 70vh;
+        background-color: #000;
+        position: relative;
+        overflow: hidden;
+    }
+    #videoFeed {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .stats-card {
+        height: 100%;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    #statsContainer {
+        height: 300px;
+    }
+    
+    /* Animation for simulating traffic tracking */
+    @keyframes vehicleMove {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(100%); }
+    }
+    .vehicle {
+        position: absolute;
+        animation: vehicleMove 15s linear infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ video.filename }}</li>
+            </ol>
+        </nav>
+        <h2><i class="fas fa-video me-2"></i>Processing: {{ video.filename }}</h2>
+        <p class="text-muted">
+            <i class="fas fa-clock me-1"></i> Uploaded: {{ video.uploaded_at }}
+        </p>
+        <a href="{{ url_for('detection_demo', video_id=video.id) }}" class="btn btn-primary">
+            <i class="fas fa-eye me-1"></i> View Object Detection Demo
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-eye me-2"></i>Live Detection & Tracking
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="videoContainer">
+                    <object id="videoFeed" type="image/svg+xml" data="{{ url_for('stream', video_id=video.id) }}">
+                        Your browser does not support SVG
+                    </object>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-info-circle me-1"></i> Object Detection & Tracking Simulation
+                    </span>
+                    <span id="processingFps" class="badge bg-primary">
+                        <i class="fas fa-tachometer-alt me-1"></i> 0 FPS
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Traffic Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="card stats-card">
+                            <div class="card-body">
+                                <div id="totalVehicles" class="stat-value">0</div>
+                                <div class="stat-label">Total Vehicles</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="card stats-card">
+                            <div class="card-body">
+                                <div id="framesProcessed" class="stat-value">0</div>
+                                <div class="stat-label">Frames Processed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mt-3 mb-2">Vehicle Type Distribution</h6>
+                <div id="vehicleTypeContainer">
+                    <ul class="list-group list-group-flush" id="vehicleTypesList">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Cars
+                            <span id="carCount" class="badge bg-primary">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Trucks
+                            <span id="truckCount" class="badge bg-success">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Buses
+                            <span id="busCount" class="badge bg-danger">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Motorcycles
+                            <span id="motorcycleCount" class="badge bg-warning">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Bicycles
+                            <span id="bicycleCount" class="badge bg-info">0</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mt-3" id="statsContainer">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Object Detection & Tracking Legend
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Detection Colors</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: lime; margin-right: 10px;"></div>
+                                <span>Car</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: blue; margin-right: 10px;"></div>
+                                <span>Truck</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: red; margin-right: 10px;"></div>
+                                <span>Bus</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: yellow; margin-right: 10px;"></div>
+                                <span>Motorcycle</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: magenta; margin-right: 10px;"></div>
+                                <span>Bicycle</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Visual Elements</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Bounding Boxes:</strong> Colored rectangles around detected objects
+                            </li>
+                            <li class="list-group-item">
+                                <strong>ID Numbers:</strong> Unique identifier for each tracked object
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Trails:</strong> Colored lines showing the object's recent path
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Live Stats:</strong> Real-time counting and classification of vehicles
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the stats chart
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        const statsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Cars', 'Trucks', 'Buses', 'Motorcycles', 'Bicycles'],
+                datasets: [{
+                    label: 'Vehicle Types',
+                    data: [0, 0, 0, 0, 0],
+                    backgroundColor: [
+                        'rgba(0, 123, 255, 0.6)',
+                        'rgba(40, 167, 69, 0.6)',
+                        'rgba(220, 53, 69, 0.6)',
+                        'rgba(255, 193, 7, 0.6)',
+                        'rgba(23, 162, 184, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 123, 255, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(220, 53, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(23, 162, 184, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        precision: 0
+                    }
+                }
+            }
+        });
+        
+        // Function to update statistics
+        function updateStats() {
+            fetch('{{ url_for("get_stats", video_id=video.id) }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Update counters
+                    document.getElementById('totalVehicles').textContent = data.vehicle_count;
+                    document.getElementById('framesProcessed').textContent = data.detection_count;
+                    document.getElementById('processingFps').textContent = `${data.processing_fps.toFixed(1)} FPS`;
+                    
+                    // Update vehicle type counts
+                    document.getElementById('carCount').textContent = data.class_counts.car || 0;
+                    document.getElementById('truckCount').textContent = data.class_counts.truck || 0;
+                    document.getElementById('busCount').textContent = data.class_counts.bus || 0;
+                    document.getElementById('motorcycleCount').textContent = data.class_counts.motorcycle || 0;
+                    document.getElementById('bicycleCount').textContent = data.class_counts.bicycle || 0;
+                    
+                    // Update chart
+                    statsChart.data.datasets[0].data = [
+                        data.class_counts.car || 0,
+                        data.class_counts.truck || 0,
+                        data.class_counts.bus || 0,
+                        data.class_counts.motorcycle || 0,
+                        data.class_counts.bicycle || 0
+                    ];
+                    statsChart.update();
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                });
+        }
+        
+        // Reload the SVG periodically to ensure it's updated
+        function refreshStream() {
+            const videoFeed = document.getElementById('videoFeed');
+            if (videoFeed) {
+                const currentSrc = videoFeed.getAttribute('data');
+                if (currentSrc) {
+                    // Add a timestamp query parameter to force reload
+                    const timestamped = currentSrc.split('?')[0] + '?t=' + new Date().getTime();
+                    videoFeed.setAttribute('data', timestamped);
+                }
+            }
+        }
+        
+        // Update stats every second
+        setInterval(updateStats, 1000);
+        
+        // Refresh stream every 5 seconds
+        setInterval(refreshStream, 5000);
+        
+        // Initial stats update
+        updateStats();
+    });
+</script>
+{% endblock %}

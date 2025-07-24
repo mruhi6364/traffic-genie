@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<title>Object Detection Demo for {{ video.filename }} - Smart Traffic Management System</title>
+<style>
+    #videoContainer {
+        width: 100%;
+        max-height: 70vh;
+        background-color: #333;
+        position: relative;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    #videoSimulation {
+        width: 100%;
+        height: auto;
+    }
+    .stats-card {
+        height: 100%;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    #statsContainer {
+        height: 300px;
+    }
+    .vehicle-indicator {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('process_video', video_id=video.id) }}">{{ video.filename }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Object Detection</li>
+            </ol>
+        </nav>
+        <h2><i class="fas fa-video me-2"></i>Object Detection for: {{ video.filename }}</h2>
+        <p class="text-muted">
+            <i class="fas fa-clock me-1"></i> Uploaded: {{ video.uploaded_at }}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cube me-2"></i>3D Object Detection Demo
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="videoContainer">
+                    <img id="videoSimulation" src="{{ url_for('stream', video_id=video.id) }}" alt="Traffic Detection" class="w-100">
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-cube me-1"></i> 3D Traffic Video with YOLO Object Detection
+                    </span>
+                    <a href="{{ url_for('index') }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-home me-1"></i> Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>About This Demonstration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="mb-3">This demo shows 3D object detection for traffic monitoring</h6>
+                        <p>In this example, we're using:</p>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>YOLOv8:</strong> High-performance object detection model
+                            </li>
+                            <li class="list-group-item">
+                                <strong>3D Video Processing:</strong> Display 3D video content as recorded
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Multiple Object Types:</strong> Cars, trucks, buses, motorcycles, bicycles and pedestrians
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Real-time Processing:</strong> With fast inference time and high FPS
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Perspective Depth:</strong> 3D visualization that accounts for distance and perspective
+                            </li>
+                        </ul>
+                        
+                        <p class="mt-3">The system now displays your 3D video files directly without adding bounding boxes, allowing you to see the content exactly as recorded. The video processing system tracks frame information and maintains all the statistical processing in the background.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the stats chart
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        const statsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Cars', 'Trucks', 'Buses', 'Motorcycles', 'Bicycles'],
+                datasets: [{
+                    label: 'Vehicle Types',
+                    data: [0, 0, 0, 0, 0],
+                    backgroundColor: [
+                        'rgba(0, 123, 255, 0.6)',
+                        'rgba(40, 167, 69, 0.6)',
+                        'rgba(220, 53, 69, 0.6)',
+                        'rgba(255, 193, 7, 0.6)',
+                        'rgba(23, 162, 184, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 123, 255, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(220, 53, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(23, 162, 184, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        precision: 0
+                    }
+                }
+            }
+        });
+        
+        // Function to update statistics
+        function updateStats() {
+            fetch('{{ url_for("get_stats", video_id=video.id) }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Update counters
+                    document.getElementById('totalVehicles').textContent = data.vehicle_count;
+                    document.getElementById('framesProcessed').textContent = data.detection_count;
+                    document.getElementById('processingFps').textContent = `${data.processing_fps.toFixed(1)} FPS`;
+                    
+                    // Update vehicle type counts
+                    document.getElementById('carCount').textContent = data.class_counts.car || 0;
+                    document.getElementById('truckCount').textContent = data.class_counts.truck || 0;
+                    document.getElementById('busCount').textContent = data.class_counts.bus || 0;
+                    document.getElementById('motorcycleCount').textContent = data.class_counts.motorcycle || 0;
+                    document.getElementById('bicycleCount').textContent = data.class_counts.bicycle || 0;
+                    
+                    // Update chart
+                    statsChart.data.datasets[0].data = [
+                        data.class_counts.car || 0,
+                        data.class_counts.truck || 0,
+                        data.class_counts.bus || 0,
+                        data.class_counts.motorcycle || 0,
+                        data.class_counts.bicycle || 0
+                    ];
+                    statsChart.update();
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                });
+        }
+        
+        // Function to refresh the video image
+        function refreshImage() {
+            const img = document.getElementById('videoSimulation');
+            if (img) {
+                const src = '{{ url_for("stream", video_id=video.id) }}';
+                const timestamp = new Date().getTime();
+                img.src = `${src}?t=${timestamp}`;
+            }
+        }
+        
+        // Update stats every second
+        setInterval(updateStats, 1000);
+        
+        // Refresh image every 200ms for a smoother animation
+        setInterval(refreshImage, 200);
+        
+        // Add event handlers for better error handling
+        const img = document.getElementById('videoSimulation');
+        if (img) {
+            img.addEventListener('error', function(e) {
+                console.error('Error loading image:', e);
+                // Try again after a short delay
+                setTimeout(refreshImage, 500);
+            });
+        }
+        
+        // Initial updates
+        updateStats();
+        refreshImage();
+    });
+</script>
+{% endblock %}

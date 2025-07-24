@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<title>Smart Traffic Management System - Home</title>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center mb-4">
+        <h1 class="display-4">Smart Traffic Management System</h1>
+        <p class="lead">Using YOLOv8 Segmentation with DeepSORT Object Tracking (ID + Trails)</p>
+        <div class="mt-3">
+            <a href="{{ url_for('detection_demo', video_id='demo-1234') }}" class="btn btn-success">
+                <i class="fas fa-play-circle me-1"></i> Try Detection Demo
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-upload me-2"></i>Upload Traffic Video
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" id="upload-form">
+                    <div class="mb-3">
+                        <label for="video" class="form-label">Select video file</label>
+                        <input class="form-control" type="file" id="video" name="video" accept=".mp4,.avi,.mov,.webm">
+                        <div class="form-text">Supported formats: MP4, AVI, MOV, WEBM. Max file size: 500MB</div>
+                    </div>
+                    <div class="progress mb-3 d-none" id="upload-progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="upload-btn">
+                        <i class="fas fa-upload me-1"></i> Upload Video
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>System Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-car me-2 text-primary"></i>
+                        <strong>Object Detection:</strong> YOLOv8 for detecting vehicles, pedestrians, and other traffic elements
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-object-group me-2 text-success"></i>
+                        <strong>Segmentation:</strong> Precise object segmentation to identify object boundaries
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-route me-2 text-warning"></i>
+                        <strong>Tracking:</strong> DeepSORT algorithm to maintain consistent object IDs across frames
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-project-diagram me-2 text-danger"></i>
+                        <strong>Visualization:</strong> Object trails to show movement patterns over time
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-chart-line me-2 text-info"></i>
+                        <strong>Analytics:</strong> Basic traffic statistics collection and visualization
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>How It Works
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5>YOLOv8 Segmentation</h5>
+                        <p>YOLOv8 (You Only Look Once) is a state-of-the-art object detection and segmentation model. It provides:</p>
+                        <ul>
+                            <li>Real-time object detection</li>
+                            <li>Precise object segmentation masks</li>
+                            <li>High accuracy in identifying traffic elements</li>
+                            <li>Efficient processing even on moderate hardware</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <svg width="300" height="200" viewBox="0 0 300 200">
+                            <rect x="50" y="50" width="200" height="100" fill="none" stroke="#6c757d" stroke-width="2" />
+                            <rect x="80" y="70" width="60" height="40" fill="rgba(40, 167, 69, 0.3)" stroke="#28a745" stroke-width="2" />
+                            <text x="110" y="95" fill="#28a745" font-size="12">Car</text>
+                            <rect x="160" y="80" width="40" height="40" fill="rgba(0, 123, 255, 0.3)" stroke="#007bff" stroke-width="2" />
+                            <text x="165" y="105" fill="#007bff" font-size="12">Person</text>
+                        </svg>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row align-items-center">
+                    <div class="col-md-6 order-md-2">
+                        <h5>DeepSORT Tracking</h5>
+                        <p>DeepSORT (Simple Online and Realtime Tracking with a Deep association metric) enhances object tracking by:</p>
+                        <ul>
+                            <li>Maintaining consistent object IDs across video frames</li>
+                            <li>Tracking objects through occlusions</li>
+                            <li>Generating movement trails to visualize object paths</li>
+                            <li>Enabling trajectory analysis for traffic patterns</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 text-center order-md-1">
+                        <svg width="300" height="200" viewBox="0 0 300 200">
+                            <path d="M50,100 C80,80 120,120 150,100 C180,80 220,120 250,100" fill="none" stroke="#fd7e14" stroke-width="3" stroke-dasharray="5,5" />
+                            <circle cx="50" cy="100" r="10" fill="#fd7e14" />
+                            <text x="45" y="85" fill="#fd7e14" font-size="12">ID:1</text>
+                            <circle cx="150" cy="100" r="10" fill="#fd7e14" />
+                            <text x="145" y="85" fill="#fd7e14" font-size="12">ID:1</text>
+                            <circle cx="250" cy="100" r="10" fill="#fd7e14" />
+                            <text x="245" y="85" fill="#fd7e14" font-size="12">ID:1</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">
+    {{ error }}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadForm = document.getElementById('upload-form');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadProgress = document.getElementById('upload-progress');
+        const progressBar = uploadProgress.querySelector('.progress-bar');
+        
+        uploadForm.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('video');
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert('Please select a video file first');
+                return;
+            }
+            
+            // Show progress bar
+            uploadProgress.classList.remove('d-none');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
+            
+            // Simulate progress (in a real app, you'd use XMLHttpRequest to track actual progress)
+            let progress = 0;
+            const interval = setInterval(function() {
+                progress += 5;
+                progressBar.style.width = progress + '%';
+                progressBar.setAttribute('aria-valuenow', progress);
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 500);
+        });
+    });
+</script>
+{% endblock %}
